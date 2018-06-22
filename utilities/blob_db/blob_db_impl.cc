@@ -615,6 +615,15 @@ class BlobDBImpl::BlobInserter : public WriteBatch::Handler {
     return s;
   }
 
+  virtual Status DeleteRangeCF(uint32_t column_family_id, const Slice& begin_key,
+                               const Slice& end_key) override {
+    if (column_family_id != default_cf_id_) {
+      return Status::NotSupported(
+          "Blob DB doesn't support non-default column family.");
+    }
+    return DeleteRange(column_family_id,begin_key,end_key);
+  }
+
   virtual Status SingleDeleteCF(uint32_t /*column_family_id*/,
                                 const Slice& /*key*/) override {
     return Status::NotSupported("Not supported operation in blob db.");
@@ -662,6 +671,10 @@ Status BlobDBImpl::Write(const WriteOptions& options, WriteBatch* updates) {
       return Status::OK();
     }
 
+    virtual Status DeleteRangeCF(uint32_t column_family_id, const Slice& begin_key,
+                                   const Slice& end_key) override {
+        return Status::OK();
+    }
     virtual Status DeleteCF(uint32_t column_family_id,
                             const Slice& key) override {
       ColumnFamilyHandle* cfh =
